@@ -1,30 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import TvIcon from '@mui/icons-material/Tv';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
-const Splash: React.FC = () => {
+const Splash = () => {
   const [showText, setShowText] = useState(false);
-  const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowText(true);
-    }, 1000); 
+    const textTimer = setTimeout(() => setShowText(true), 1000);
+    const navigateTimer = setTimeout(() => navigate('/home'), 3000);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleClick = () => {
-    navigate('/home');
-  };
-
-  const toggleSidebar = () => {
-    setExpanded(!expanded);
-  };
+    return () => {
+      clearTimeout(textTimer);
+      clearTimeout(navigateTimer);
+    };
+  }, [navigate]);
 
   return (
     <Box
@@ -65,38 +56,14 @@ const Splash: React.FC = () => {
           },
         },
       }}
-      onClick={handleClick}
+      onClick={() => navigate('/home')}
     >
       <TvIcon className="tv-icon" />
       {showText && (
         <Typography variant="h3" className="fade-in-text">
-          THE MOVIE APPS
+          THE MOVIES APP
         </Typography>
       )}
-      <Box
-        sx={{
-          backgroundColor: '#161d2f',
-          padding: 2,
-          borderRadius: 2,
-          display: 'flex',
-          flexDirection: {
-            xs: 'row',
-            lg: 'column',
-          },
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          width: expanded ? 200 : 60,
-          transition: 'width 0.3s',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          height: '100%',
-        }}
-      >
-        <IconButton onClick={toggleSidebar} sx={{ color: 'white' }}>
-          {expanded ? <ArrowBackIcon /> : <ArrowForwardIcon />}
-        </IconButton>
-      </Box>
     </Box>
   );
 };
