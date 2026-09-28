@@ -1,20 +1,38 @@
-import React, { useContext } from "react";
+import { MouseEvent, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { MovieDataType } from "../../assets/data";
 import { MovieContext } from "../../context/movie-context";
-import { Box, Card, CardContent, Stack, Typography, Grid } from "@mui/material";
+import { Box, Card, CardContent, IconButton, Stack, Typography, Grid } from "@mui/material";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import moviesIcon from "../../assets/icons/icon-category-movie.svg";
 import tvSeriesIcon from "../../assets/icons/icon-category-tv.svg";
 import BookmarkIcon from "../icons/bookmark-icon";
 import BookmarkEmptyIcon from "../icons/bookmark-empy-icon";
+import TrailerModal from "../trailer-modal";
+import { useTrailer } from "../../hooks/useTrailer";
 
 interface MovieTrendCardProps {
   movie: MovieDataType;
 }
 
 const MovieTrendCard = ({ movie }: MovieTrendCardProps) => {
-  const { dispatch } = useContext(MovieContext);
-  const handleToggleBookmark = (id: string) => {
-    dispatch({ type: "TOOGLE BOOKMARK", id });
+  const { state, dispatch } = useContext(MovieContext);
+  const trailer = useTrailer();
+  const navigate = useNavigate();
+  const isBookmarked = Boolean(state.bookmarks[movie.id]);
+
+  const handleToggleBookmark = (e: MouseEvent) => {
+    e.stopPropagation();
+    dispatch({ type: "TOGGLE_BOOKMARK", movie });
+  };
+
+  const handlePlayTrailer = (e: MouseEvent) => {
+    e.stopPropagation();
+    trailer.play(movie.mediaType, movie.tmdbId);
+  };
+
+  const handleOpenDetails = () => {
+    navigate(`/title/${movie.mediaType}/${movie.tmdbId}`);
   };
 
   return (
@@ -24,47 +42,60 @@ const MovieTrendCard = ({ movie }: MovieTrendCardProps) => {
       style={{ backgroundColor: "transparent" }}
     >
       <CardContent
+        onClick={handleOpenDetails}
         style={{
           padding: 0,
           position: "relative",
           overflowX: "scroll",
           display: "flex",
+          cursor: "pointer",
         }}
       >
         <img
-          src={movie.thumbnail.regular.large}
+          src={movie.thumbnail.trending?.large || movie.thumbnail.regular.large}
           alt=""
           style={{ width: "300px", height: "100%", borderRadius: "8px" }}
         />
         <Box
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          bgcolor="rgba(0,0,0,0.6)"
-          borderRadius="8px"
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            bgcolor: "rgba(0,0,0,0.6)",
+            borderRadius: "8px",
+          }}
         />
-        <Stack
-          mt="6"
-          spacing={0}
-          position="absolute"
-          bottom={0}
-          left={0}
-          right={0}
-          p={4}
+        <IconButton
+          aria-label={`play ${movie.title} trailer`}
+          onClick={handlePlayTrailer}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            color: "#fff",
+            backgroundColor: "rgba(0,0,0,0.6)",
+            "&:hover": { backgroundColor: "rgba(0,0,0,0.8)" },
+          }}
         >
-          <Grid container alignItems="center" spacing={1}>
-            <Grid item>
+          <PlayArrowIcon fontSize="large" />
+        </IconButton>
+        <Stack
+          spacing={0}
+          sx={{ mt: "6", position: "absolute", bottom: 0, left: 0, right: 0, p: 4 }}
+        >
+          <Grid container spacing={1} sx={{ alignItems: "center" }}>
+            <Grid>
               <Typography
-                fontSize={10}
-                color="#E0E0E0"
+                sx={{ fontSize: 10, color: "#E0E0E0" }}
                 aria-label="year of movie"
               >
                 {movie.year}
               </Typography>
             </Grid>
-            <Grid item>
+            <Grid>
               <Box
                 sx={{
                   width: "1rem",
@@ -74,24 +105,23 @@ const MovieTrendCard = ({ movie }: MovieTrendCardProps) => {
                 }}
               />
             </Grid>
-            <Grid item>
+            <Grid>
               <img
-                src={movie.category === "Movies" ? moviesIcon : tvSeriesIcon}
+                src={movie.category === "Movie" ? moviesIcon : tvSeriesIcon}
                 alt=""
                 width={16}
                 height={16}
               />
             </Grid>
-            <Grid item>
+            <Grid>
               <Typography
-                fontSize={10}
-                color="#E0E0E0"
+                sx={{ fontSize: 10, color: "#E0E0E0" }}
                 aria-label="movie category"
               >
                 {movie.category}
               </Typography>
             </Grid>
-            <Grid item>
+            <Grid>
               <Box
                 sx={{
                   width: "1rem",
@@ -101,17 +131,16 @@ const MovieTrendCard = ({ movie }: MovieTrendCardProps) => {
                 }}
               />
             </Grid>
-            <Grid item>
+            <Grid>
               <Typography
-                fontSize={10}
-                color="#E0E0E0"
+                sx={{ fontSize: 10, color: "#E0E0E0" }}
                 aria-label="movie rating"
               >
                 {movie.rating}
               </Typography>
             </Grid>
           </Grid>
-          <Typography color="#E0E0E0" padding={0} aria-label="movie title">
+          <Typography sx={{ color: "#E0E0E0", padding: 0 }} aria-label="movie title">
             {movie.title}
           </Typography>
         </Stack>
@@ -132,11 +161,11 @@ const MovieTrendCard = ({ movie }: MovieTrendCardProps) => {
               backgroundColor: "black",
               borderRadius: "100%",
               cursor: "pointer",
-              "&: hover": { opacity: 0.8 },
+              "&:hover": { opacity: 0.8 },
             }}
-            onClick={() => handleToggleBookmark(movie.id)}
+            onClick={handleToggleBookmark}
           >
-            {movie.isBookmarked ? (
+            {isBookmarked ? (
               <BookmarkIcon fill={"#E0E0E0"} />
             ) : (
               <BookmarkEmptyIcon />
@@ -144,6 +173,14 @@ const MovieTrendCard = ({ movie }: MovieTrendCardProps) => {
           </Box>
         </Box>
       </CardContent>
+      <TrailerModal
+        open={trailer.open}
+        onClose={trailer.close}
+        videoKey={trailer.videoKey}
+        loading={trailer.loading}
+        error={trailer.error}
+        title={movie.title}
+      />
     </Card>
   );
 };

@@ -1,30 +1,28 @@
 import { ReactNode } from "react";
 import { Box } from "@mui/material";
-import Sidebar from "../components/sidebar";
+import Navbar from "../components/navbar";
 
 interface LayoutProps {
   children: ReactNode;
+  search?: ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = ({ children, search }: LayoutProps) => {
   return (
     <Box
       sx={{
-        backgroundColor: "#10141F",
+        bgcolor: "background.default",
         display: "flex",
-        flexDirection: {
-          xs: "column",
-          lg: "row",
-        },
-        color: "white",
-        padding: 3,
-        gap: 3,
-        overflowY: "hidden",
+        flexDirection: "column",
+        color: "text.primary",
+        padding: { xs: 1.5, sm: 3 },
+        gap: { xs: 1.5, sm: 3 },
         height: "100vh",
+        overflowY: "hidden",
       }}
     >
-      <Sidebar />
-      <Box sx={{ width: "100%", overflowY: "scroll" }}>{children}</Box>
+      <Navbar search={search} />
+      <Box sx={{ width: "100%", flex: 1, overflowY: "scroll" }}>{children}</Box>
     </Box>
   );
 };

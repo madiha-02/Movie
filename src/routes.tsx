@@ -5,6 +5,7 @@ import Movie from "./pages/movie";
 import TvSeries from "./pages/tv-series";
 import Bookmark from "./pages/bookmark";
 import Splash from "./pages/splash";
+import Detail from "./pages/detail";
 
 export const router = createBrowserRouter([
  
@@ -31,6 +32,11 @@ export const router = createBrowserRouter([
   {
     path: "/bookmarks",
     element: <Bookmark />,
+    errorElement: <Error />,
+  },
+  {
+    path: "/title/:mediaType/:tmdbId",
+    element: <Detail />,
     errorElement: <Error />,
   },
 ]);

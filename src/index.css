@@ -17,3 +17,7 @@
   background: #161d2f;
   border-radius: 2px;
 }
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(27, 31, 59, 0.25);
+}

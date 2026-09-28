@@ -1,47 +1,104 @@
-import React, { useContext } from "react";
+import { MouseEvent, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { MovieDataType } from "../../assets/data";
 import { MovieContext } from "../../context/movie-context";
-import { Box, Card, CardContent, Typography, Grid } from "@mui/material";
+import { Box, Card, CardContent, IconButton, Stack, Typography, Grid } from "@mui/material";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import moviesIcon from "../../assets/icons/icon-category-movie.svg";
 import tvSeriesIcon from "../../assets/icons/icon-category-tv.svg";
 import BookmarkIcon from "../icons/bookmark-icon";
 import BookmarkEmptyIcon from "../icons/bookmark-empy-icon";
+import TrailerModal from "../trailer-modal";
+import { useTrailer } from "../../hooks/useTrailer";
 
 interface MovieCardProps {
   movie: MovieDataType;
 }
 
 const MovieCard = ({ movie }: MovieCardProps) => {
-  const { dispatch } = useContext(MovieContext);
-  const handleToggleBookmark = (id: string) => {
-    dispatch({ type: "TOOGLE BOOKMARK", id });
+  const { state, dispatch } = useContext(MovieContext);
+  const trailer = useTrailer();
+  const navigate = useNavigate();
+  const isBookmarked = Boolean(state.bookmarks[movie.id]);
+
+  const handleToggleBookmark = (e: MouseEvent) => {
+    e.stopPropagation();
+    dispatch({ type: "TOGGLE_BOOKMARK", movie });
   };
+
+  const handlePlayTrailer = (e: MouseEvent) => {
+    e.stopPropagation();
+    trailer.play(movie.mediaType, movie.tmdbId);
+  };
+
+  const handleOpenDetails = () => {
+    navigate(`/title/${movie.mediaType}/${movie.tmdbId}`);
+  };
+
   return (
     <Card
-      variant="outlined"
-      sx={{ bgcolor: "transparent", color: "#E0E0E0", my: 3, border: "none" }}
+      elevation={0}
+      sx={{ bgcolor: "transparent", color: "#E0E0E0", my: 1 }}
     >
       <CardContent sx={{ p: 0, position: "relative" }}>
-        <Grid container spacing={1}>
-          <Grid item>
-            <img
-              src={movie.thumbnail.regular.large}
-              alt=""
-              style={{ width: "400px", height: "180px", borderRadius: "8px" }}
-            />
-          </Grid>
-          <Grid item xs={8}>
-            <Grid container spacing={1} alignItems="center">
-              <Grid item>
+        <Box
+          onClick={handleOpenDetails}
+          sx={{
+            position: "relative",
+            width: "100%",
+            aspectRatio: "2 / 3",
+            cursor: "pointer",
+          }}
+        >
+          <Box
+            component="img"
+            src={movie.thumbnail.regular.large}
+            alt=""
+            sx={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              borderRadius: "8px",
+              display: "block",
+            }}
+          />
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              bgcolor: "rgba(0,0,0,0.6)",
+              borderRadius: "8px",
+            }}
+          />
+          <IconButton
+            aria-label={`play ${movie.title} trailer`}
+            onClick={handlePlayTrailer}
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              color: "#fff",
+              backgroundColor: "rgba(0,0,0,0.6)",
+              "&:hover": { backgroundColor: "rgba(0,0,0,0.8)" },
+            }}
+          >
+            <PlayArrowIcon fontSize="large" />
+          </IconButton>
+          <Stack
+            spacing={0}
+            sx={{ position: "absolute", bottom: 0, left: 0, right: 0, p: 2 }}
+          >
+            <Grid container spacing={1} sx={{ alignItems: "center" }}>
+              <Grid>
                 <Typography
-                  fontSize={10}
-                  color="#E0E0E0"
+                  sx={{ fontSize: 10, color: "#E0E0E0" }}
                   aria-label="year of movie"
                 >
                   {movie.year}
                 </Typography>
               </Grid>
-              <Grid item>
+              <Grid>
                 <Box
                   sx={{
                     width: "4px",
@@ -51,24 +108,23 @@ const MovieCard = ({ movie }: MovieCardProps) => {
                   }}
                 />
               </Grid>
-              <Grid item>
+              <Grid>
                 <img
-                  src={movie.category === "Movies" ? moviesIcon : tvSeriesIcon}
+                  src={movie.category === "Movie" ? moviesIcon : tvSeriesIcon}
                   alt=""
                   width={16}
                   height={16}
                 />
               </Grid>
-              <Grid item>
+              <Grid>
                 <Typography
-                  fontSize={10}
-                  color="#E0E0E0"
+                  sx={{ fontSize: 10, color: "#E0E0E0" }}
                   aria-label="movie category"
                 >
                   {movie.category}
                 </Typography>
               </Grid>
-              <Grid item>
+              <Grid>
                 <Box
                   sx={{
                     width: "4px",
@@ -78,49 +134,66 @@ const MovieCard = ({ movie }: MovieCardProps) => {
                   }}
                 />
               </Grid>
-              <Grid item>
+              <Grid>
                 <Typography
-                  fontSize={10}
-                  color="#E0E0E0"
+                  sx={{ fontSize: 10, color: "#E0E0E0" }}
                   aria-label="movie rating"
                 >
                   {movie.rating}
                 </Typography>
               </Grid>
             </Grid>
-            <Typography aria-label="movie rating" padding={0}>
+            <Typography
+              sx={{
+                color: "#E0E0E0",
+                padding: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              aria-label="movie title"
+            >
               {movie.title}
             </Typography>
-          </Grid>
-          <Grid item xs={2} sx={{ position: "absolute", top: 0, right: 0 }}>
+          </Stack>
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              display: "flex",
+              justifyContent: "flex-end",
+              p: 2,
+            }}
+          >
             <Box
               sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
                 p: "1rem",
+                backgroundColor: "black",
+                borderRadius: "100%",
+                cursor: "pointer",
+                "&:hover": { opacity: 0.8 },
               }}
+              onClick={handleToggleBookmark}
             >
-              <Box
-                sx={{
-                  p: "1rem",
-                  backgroundColor: "black",
-                  borderRadius: "100%",
-                  cursor: "pointer",
-                  "&:hover": { opacity: 0.8 },
-                }}
-                onClick={() => handleToggleBookmark(movie.id)}
-              >
-                {movie.isBookmarked ? (
-                  <BookmarkIcon fill={"#E0E0E0"} />
-                ) : (
-                  <BookmarkEmptyIcon />
-                )}
-              </Box>
+              {isBookmarked ? (
+                <BookmarkIcon fill={"#E0E0E0"} />
+              ) : (
+                <BookmarkEmptyIcon />
+              )}
             </Box>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </CardContent>
+      <TrailerModal
+        open={trailer.open}
+        onClose={trailer.close}
+        videoKey={trailer.videoKey}
+        loading={trailer.loading}
+        error={trailer.error}
+        title={movie.title}
+      />
     </Card>
   );
 };
